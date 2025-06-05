@@ -15,7 +15,7 @@ class Server {
   setupMiddleware() {
     // 解析 JSON 请求体
     this.app.use(bodyParser.json());
-    
+
     // 请求日志中间件
     this.app.use((req, res, next) => {
       logger.info(`${req.method} ${req.url}`, {
@@ -42,7 +42,7 @@ class Server {
 
         // 处理飞书事件
         const { challenge, event } = req.body;
-        
+
         // 处理验证请求
         if (challenge) {
           return res.json({ challenge });
@@ -69,4 +69,4 @@ class Server {
   }
 }
 
-module.exports = Server; 
+module.exports = Server;

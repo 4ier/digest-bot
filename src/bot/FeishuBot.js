@@ -9,7 +9,7 @@ class FeishuBot {
       appSecret: config.feishu.appSecret,
       disableTokenCache: false,
     });
-    
+
     this.verificationToken = config.feishu.verificationToken;
     this.encryptKey = config.feishu.encryptKey;
   }
@@ -48,7 +48,7 @@ class FeishuBot {
   async handleMessage(event) {
     try {
       const { message, sender, chat_id } = event;
-      
+
       // 记录消息
       logger.info('Received message:', {
         chatId: chat_id,
@@ -82,10 +82,10 @@ class FeishuBot {
   async handleTextMessage(message, chatId) {
     try {
       const text = message.content.text;
-      
+
       // TODO: 实现链接提取
       // TODO: 实现内容处理
-      
+
       // 临时回复
       await this.replyMessage(chatId, '收到消息：' + text);
     } catch (error) {
@@ -137,4 +137,4 @@ class FeishuBot {
   }
 }
 
-module.exports = FeishuBot; 
+module.exports = FeishuBot;
