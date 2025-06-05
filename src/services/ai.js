@@ -15,14 +15,16 @@ class AIService {
    * @param {string} content - 文章内容
    * @returns {Promise<string>} 生成的摘要
    */
-  async generateSummary(content) {
+  async generateSummary(content, options = {}) {
+    const style = options.style || 'bullet';
+    const styleText = style === 'bullet' ? '请用条目形式' : '请用简洁段落';
     try {
       const response = await this.client.chat.completions.create({
         model: config.siliconflow.model,
         messages: [
           {
             role: 'system',
-            content: '你是一个专业的文章摘要生成助手。请用简洁的语言总结文章的主要内容，突出关键信息。',
+            content: `你是一个专业的文章摘要生成助手。${styleText}总结文章的主要内容，突出关键信息。`,
           },
           {
             role: 'user',
