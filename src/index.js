@@ -6,11 +6,11 @@ const logger = require('./utils/logger');
 async function init() {
   try {
     logger.info('Starting Feishu Digest Bot...');
-    
+
     // 启动 HTTP 服务器
     const server = new Server();
     server.start();
-    
+
     logger.info('Feishu Digest Bot started successfully');
   } catch (error) {
     logger.error('Failed to start Feishu Digest Bot:', error);
@@ -31,4 +31,4 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start the application
-init(); 
+init();

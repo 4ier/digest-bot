@@ -51,4 +51,4 @@ if (config.server.env === 'development') {
   );
 }
 
-module.exports = logger; 
+module.exports = logger;

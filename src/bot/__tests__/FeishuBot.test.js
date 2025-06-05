@@ -1,5 +1,4 @@
 const FeishuBot = require('../FeishuBot');
-const config = require('../../config');
 
 // Mock dependencies
 jest.mock('@larksuiteoapi/node-sdk', () => {
@@ -169,4 +168,4 @@ describe('FeishuBot', () => {
       await expect(bot.replyMessage(chatId, content)).rejects.toThrow('Test error');
     });
   });
-}); 
+});

@@ -1,4 +1,4 @@
-const urlRegex = /https?:\/\/[\w.-]+(?:\.[\w\.-]+)+(?:[\/?#][^\s]*)?/gi;
+const urlRegex = /https?:\/\/[\w.-]+(?:\.[\w.-]+)+(?:[/?#][^\s]*)?/gi;
 
 const platformPatterns = {
   weixin: /https?:\/\/mp\.weixin\.qq\.com\/[^\s]+/i,
