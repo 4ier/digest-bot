@@ -2,7 +2,17 @@ const FeishuBot = require('../FeishuBot');
 const config = require('../../config');
 
 // Mock dependencies
-jest.mock('@larksuiteoapi/node-sdk');
+jest.mock('@larksuiteoapi/node-sdk', () => {
+  return {
+    Client: jest.fn().mockImplementation(() => ({
+      im: {
+        message: {
+          create: jest.fn(),
+        },
+      },
+    })),
+  };
+});
 jest.mock('../../utils/logger');
 jest.mock('../../config', () => ({
   feishu: {
@@ -10,6 +20,13 @@ jest.mock('../../config', () => ({
     appSecret: 'test_app_secret',
     verificationToken: 'test_token',
     encryptKey: 'test_key',
+  },
+  logging: {
+    filePath: 'logs/test.log',
+    level: 'info',
+  },
+  server: {
+    env: 'test',
   },
 }));
 
