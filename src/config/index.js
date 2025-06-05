@@ -1,0 +1,60 @@
+const config = {
+  server: {
+    port: process.env.PORT || 3000,
+    env: process.env.NODE_ENV || 'development',
+  },
+  
+  mongodb: {
+    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/feishu-digest-bot',
+  },
+  
+  feishu: {
+    appId: process.env.FEISHU_APP_ID,
+    appSecret: process.env.FEISHU_APP_SECRET,
+    verificationToken: process.env.FEISHU_VERIFICATION_TOKEN,
+    encryptKey: process.env.FEISHU_ENCRYPT_KEY,
+  },
+  
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY,
+  },
+  
+  logging: {
+    level: process.env.LOG_LEVEL || 'info',
+    filePath: process.env.LOG_FILE_PATH || 'logs/app.log',
+  },
+  
+  features: {
+    enableMockData: process.env.ENABLE_MOCK_DATA === 'true',
+    enableDailyDigest: process.env.ENABLE_DAILY_DIGEST !== 'false',
+    digestTime: process.env.DIGEST_TIME || '20:00',
+  },
+};
+
+// Validate required configuration
+const requiredConfigs = [
+  'feishu.appId',
+  'feishu.appSecret',
+  'feishu.verificationToken',
+  'openai.apiKey',
+];
+
+function validateConfig() {
+  const missing = [];
+  
+  for (const configPath of requiredConfigs) {
+    const value = configPath.split('.').reduce((obj, key) => obj?.[key], config);
+    if (!value) {
+      missing.push(configPath);
+    }
+  }
+  
+  if (missing.length > 0) {
+    throw new Error(`Missing required configuration: ${missing.join(', ')}`);
+  }
+}
+
+// Validate configuration on load
+validateConfig();
+
+module.exports = config; 

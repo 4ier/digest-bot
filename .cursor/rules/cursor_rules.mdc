@@ -1,0 +1,163 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# CursorRules for 长话短说Bot
+
+## Development Mode Guidelines
+
+### Interface-First Principle
+- Complete interface definition required before module development
+- Interface definition must include:
+  - Function signatures/API endpoints
+  - Input parameter types and constraints
+  - Return value types and formats
+  - Error handling methods
+  - Usage examples
+
+### Natural Language Driven Development
+- Use natural language for development requirements
+- Each task must include:
+  - User scenario description
+  - Input/output examples
+  - Error handling expectations
+  - Boundary conditions
+
+### Test-Driven Development
+- Use natural language for test cases
+- Each test must include:
+  - Test purpose
+  - Test data
+  - Expected results
+  - Boundary conditions
+
+## Code Quality Control
+
+### Code Standards
+- Follow project code style guidelines
+- Each file must include:
+  - File header comments (purpose, author, date)
+  - Key function comments
+  - Complex logic explanations
+
+### Error Handling
+- Unified error handling mechanism
+- Each error must include:
+  - Error type
+  - Error description
+  - Error code
+  - Handling suggestions
+
+### Logging Standards
+- Unified log format
+- Standardized log levels
+- Required logging for key operations
+
+## Version Control Guidelines
+
+### Feature Release Management
+- Each feature release must provide:
+  - Feature documentation
+  - Interface change documentation
+  - Test reports
+  - Deployment instructions
+
+### Version Number Management
+- Follow semantic versioning
+- Version format: major.minor.patch
+- Version number must be updated for each release
+
+## Documentation Standards
+
+### API Documentation
+- Use Swagger/OpenAPI standards
+- Documentation must include:
+  - API descriptions
+  - Request/response examples
+  - Error code explanations
+  - Usage instructions
+
+### Development Documentation
+- Each module must provide:
+  - Module description
+  - Architecture design
+  - Key processes
+  - Important notes
+
+## Security Guidelines
+
+### Data Security
+- Encrypt sensitive data storage
+- Access control
+- Data backup strategy
+
+### API Security
+- API authentication mechanism
+- Request rate limiting
+- Data validation mechanism
+
+## Performance Guidelines
+
+### Performance Metrics
+- Response time requirements
+- Concurrent processing capability
+- Resource usage limits
+
+### Optimization Strategy
+- Cache usage standards
+- Database optimization
+- Code performance optimization
+
+## Development Process
+
+### Task Management
+- Use natural language for task description
+- Tasks must include:
+  - Goal description
+  - Acceptance criteria
+  - Timeline
+  - Dependencies
+
+### Code Review
+- Pre-commit self-review
+- Critical code review
+- Performance impact assessment
+
+## Emergency Procedures
+
+### Issue Handling
+- Issue classification standards
+- Handling procedures
+- Escalation mechanism
+
+### Rollback Mechanism
+- Rollback trigger conditions
+- Rollback procedures
+- Data recovery plan
+
+## Communication Guidelines
+
+### Development Communication
+- Use natural language for problem description
+- Provide complete context
+- Clear expected results
+
+### Documentation Updates
+- Timely documentation updates
+- Maintain documentation consistency
+- Version correspondence
+
+## Acceptance Criteria
+
+### Feature Acceptance
+- Feature completeness
+- Interface correctness
+- Performance compliance
+- Security compliance
+
+### Documentation Acceptance
+- Documentation completeness
+- Documentation accuracy
+- Documentation timeliness
+
