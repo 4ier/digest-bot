@@ -12,7 +12,7 @@ class Summarizer {
     const style = options.style || this.defaultStyle;
     const content = await contentFetcher.fetch(url);
     let attempt = 0;
-    while (true) {
+    while (attempt <= this.maxRetries) {
       try {
         return await aiService.generateSummary(content, { style });
       } catch (err) {
