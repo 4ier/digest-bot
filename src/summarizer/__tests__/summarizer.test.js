@@ -12,7 +12,6 @@ jest.mock('../../utils/logger');
 const Summarizer = require('../summarizer');
 const aiService = require('../../services/ai');
 const contentFetcher = require('../../services/contentFetcher');
-const logger = require('../../utils/logger');
 
 describe('Summarizer', () => {
   beforeEach(() => {
