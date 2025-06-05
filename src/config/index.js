@@ -15,6 +15,12 @@ const config = {
     encryptKey: process.env.FEISHU_ENCRYPT_KEY,
   },
   
+  siliconflow: {
+    apiKey: process.env.SILICONFLOW_API_KEY,
+    baseUrl: process.env.SILICONFLOW_BASE_URL || 'https://api.siliconflow.cn/v1',
+    model: process.env.SILICONFLOW_MODEL || 'deepseek-ai/DeepSeek-R1',
+  },
+  
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
   },
@@ -36,6 +42,7 @@ const requiredConfigs = [
   'feishu.appId',
   'feishu.appSecret',
   'feishu.verificationToken',
+  'siliconflow.apiKey',
   'openai.apiKey',
 ];
 
