@@ -99,6 +99,23 @@ describe('FeishuBot', () => {
       );
     });
 
+    it('should ignore messages from bots', async () => {
+      const event = {
+        message: {
+          message_type: 'text',
+          content: { text: 'hi' },
+        },
+        sender: { sender_id: 'bot', sender_type: 'bot' },
+        chat_id: 'test_chat',
+      };
+
+      bot.replyMessage = jest.fn();
+
+      await bot.handleMessage(event);
+
+      expect(bot.replyMessage).not.toHaveBeenCalled();
+    });
+
     it('should handle unsupported message type', async () => {
       const event = {
         message: {

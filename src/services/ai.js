@@ -1,6 +1,7 @@
 const { OpenAI } = require('openai');
 const config = require('../config');
 const logger = require('../utils/logger');
+const { AppError } = require('../utils/errors');
 
 class AIService {
   constructor() {
@@ -38,7 +39,7 @@ class AIService {
       return response.choices[0].message.content.trim();
     } catch (error) {
       logger.error('生成摘要失败:', error);
-      throw new Error('生成摘要失败');
+      throw new AppError('生成摘要失败', 500, error);
     }
   }
 
@@ -72,7 +73,7 @@ class AIService {
       return response.choices[0].message.content.trim();
     } catch (error) {
       logger.error('生成每日摘要失败:', error);
-      throw new Error('生成每日摘要失败');
+      throw new AppError('生成每日摘要失败', 500, error);
     }
   }
 
@@ -104,7 +105,7 @@ class AIService {
       return result;
     } catch (error) {
       logger.error('分析文章类型失败:', error);
-      throw new Error('分析文章类型失败');
+      throw new AppError('分析文章类型失败', 500, error);
     }
   }
 }
