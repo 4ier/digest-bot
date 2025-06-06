@@ -41,12 +41,18 @@ npm install
 ```bash
 cp .env.example .env
 # 编辑 .env 文件，填入必要的配置信息
+# 如需演示模式，可将 ENABLE_MOCK_DATA 设置为 true
 ```
 
 4. 启动开发服务器
 ```bash
 npm run dev
 ```
+
+## 演示模式
+
+当 `ENABLE_MOCK_DATA` 设置为 `true` 时，应用将生成演示用的链接和摘要。
+启动后访问 `/demo/mock-data` 即可获取示例数据。
 
 ## 项目结构
 
