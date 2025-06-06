@@ -4,6 +4,7 @@ jest.mock('../../config', () => ({
   openai: { apiKey: 'k' },
   logging: { level: 'info', filePath: 'logs/app.log' },
   server: { env: 'test' },
+  features: { enableMockData: false },
 }));
 jest.mock('../../services/ai');
 jest.mock('../../services/contentFetcher');
@@ -50,5 +51,15 @@ describe('Summarizer', () => {
 
     await expect(summarizer.summarize('http://c.com')).rejects.toThrow('err');
     expect(aiService.generateSummary).toHaveBeenCalledTimes(2);
+  });
+
+  test('uses mock data when enabled', async () => {
+    const config = require('../../config');
+    config.features.enableMockData = true;
+    const summarizer = new Summarizer();
+    const mockData = require('../../mock/mockData');
+    const result = await summarizer.summarize('http://demo.com');
+    expect(result).toBe(mockData.getMockSummary('http://demo.com', 'bullet'));
+    expect(aiService.generateSummary).not.toHaveBeenCalled();
   });
 });

@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const FeishuBot = require('./bot/FeishuBot');
 const logger = require('./utils/logger');
 const config = require('./config');
+const mockData = require('./mock/mockData');
 
 class Server {
   constructor() {
@@ -59,6 +60,12 @@ class Server {
         res.status(500).json({ error: 'Internal server error' });
       }
     });
+
+    if (config.features.enableMockData) {
+      this.app.get('/demo/mock-data', (req, res) => {
+        res.json({ links: mockData.getMockLinksWithSummaries() });
+      });
+    }
   }
 
   start() {
