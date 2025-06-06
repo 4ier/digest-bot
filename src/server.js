@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const FeishuBot = require('./bot/FeishuBot');
 const logger = require('./utils/logger');
 const config = require('./config');
+const tenantSettings = require('./services/tenantSettings');
 
 class Server {
   constructor() {
@@ -30,6 +31,30 @@ class Server {
     // 健康检查接口
     this.app.get('/health', (req, res) => {
       res.json({ status: 'ok' });
+    });
+
+    // Tenant settings API
+    this.app.get('/api/tenants/:tenantId/settings', async (req, res) => {
+      try {
+        const data = await tenantSettings.getSettings(req.params.tenantId);
+        res.json(data);
+      } catch (err) {
+        logger.error('Failed to get settings:', err);
+        res.status(500).json({ error: 'Failed to get settings' });
+      }
+    });
+
+    this.app.put('/api/tenants/:tenantId/settings', async (req, res) => {
+      try {
+        const data = await tenantSettings.updateSettings(
+          req.params.tenantId,
+          req.body
+        );
+        res.json(data);
+      } catch (err) {
+        logger.error('Failed to update settings:', err);
+        res.status(500).json({ error: 'Failed to update settings' });
+      }
     });
 
     // 飞书事件回调接口
