@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const { AppError } = require('../utils/errors');
 
 class ContentFetcher {
   constructor() {
@@ -24,7 +25,7 @@ class ContentFetcher {
       this.cache.set(url, text);
       return text;
     } catch (err) {
-      throw new Error('内容抓取失败');
+      throw new AppError('内容抓取失败', 500, err);
     }
   }
 

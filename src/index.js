@@ -1,6 +1,7 @@
 require('dotenv').config();
 const Server = require('./server');
 const logger = require('./utils/logger');
+const TaskScheduler = require('./scheduler/taskScheduler');
 
 // Initialize application
 async function init() {
@@ -10,6 +11,10 @@ async function init() {
     // 启动 HTTP 服务器
     const server = new Server();
     server.start();
+
+    // 启动定时任务
+    const scheduler = new TaskScheduler();
+    scheduler.start();
 
     logger.info('Feishu Digest Bot started successfully');
   } catch (error) {

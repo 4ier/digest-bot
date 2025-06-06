@@ -13,6 +13,7 @@ const config = {
     appSecret: process.env.FEISHU_APP_SECRET,
     verificationToken: process.env.FEISHU_VERIFICATION_TOKEN,
     encryptKey: process.env.FEISHU_ENCRYPT_KEY,
+    defaultChatId: process.env.FEISHU_DEFAULT_CHAT_ID,
   },
 
   siliconflow: {

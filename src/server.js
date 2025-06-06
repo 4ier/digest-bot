@@ -4,6 +4,7 @@ const FeishuBot = require('./bot/FeishuBot');
 const logger = require('./utils/logger');
 const config = require('./config');
 const tenantSettings = require('./services/tenantSettings');
+const mockData = require('./mock/mockData');
 
 class Server {
   constructor() {
@@ -11,6 +12,7 @@ class Server {
     this.bot = new FeishuBot();
     this.setupMiddleware();
     this.setupRoutes();
+    this.setupErrorHandling();
   }
 
   setupMiddleware() {
@@ -58,7 +60,7 @@ class Server {
     });
 
     // 飞书事件回调接口
-    this.app.post('/webhook/feishu', async (req, res) => {
+    this.app.post('/webhook/feishu', async (req, res, next) => {
       try {
         // 验证请求
         if (!this.bot.verifyRequest(req.headers, req.body)) {
@@ -80,9 +82,23 @@ class Server {
 
         res.json({ ok: true });
       } catch (error) {
-        logger.error('Error handling webhook:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        next(error);
       }
+    });
+
+    if (config.features.enableMockData) {
+      this.app.get('/demo/mock-data', (req, res) => {
+        res.json({ links: mockData.getMockLinksWithSummaries() });
+      });
+    }
+  }
+
+  setupErrorHandling() {
+    // eslint-disable-next-line no-unused-vars
+    this.app.use((err, req, res, next) => {
+      logger.error('Unhandled error:', err);
+      const status = err.status || 500;
+      res.status(status).json({ error: err.message || 'Internal server error' });
     });
   }
 
