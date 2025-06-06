@@ -9,10 +9,22 @@ jest.mock('../../config', () => ({
 jest.mock('../../services/ai');
 jest.mock('../../services/contentFetcher');
 jest.mock('../../utils/logger');
+jest.mock('../../services/monitoring/metrics', () => {
+  const endTimer = jest.fn();
+  return {
+    summarySuccess: { inc: jest.fn() },
+    summaryFailure: { inc: jest.fn() },
+    summaryDuration: { startTimer: jest.fn(() => endTimer) },
+    __endTimer: endTimer,
+  };
+});
+jest.mock('../../services/monitoring/alertNotifier');
 
 const Summarizer = require('../summarizer');
 const aiService = require('../../services/ai');
 const contentFetcher = require('../../services/contentFetcher');
+const metrics = require('../../services/monitoring/metrics');
+const alertNotifier = require('../../services/monitoring/alertNotifier');
 
 describe('Summarizer', () => {
   beforeEach(() => {
@@ -29,6 +41,10 @@ describe('Summarizer', () => {
     expect(contentFetcher.fetch).toHaveBeenCalledWith('http://a.com');
     expect(aiService.generateSummary).toHaveBeenCalledWith('content', { style: 'paragraph' });
     expect(result).toBe('summary');
+    expect(metrics.summaryDuration.startTimer).toHaveBeenCalled();
+    expect(metrics.__endTimer).toHaveBeenCalled();
+    expect(metrics.summarySuccess.inc).toHaveBeenCalled();
+    expect(metrics.summaryFailure.inc).not.toHaveBeenCalled();
   });
 
   test('retries on failure', async () => {
@@ -42,6 +58,8 @@ describe('Summarizer', () => {
 
     expect(aiService.generateSummary).toHaveBeenCalledTimes(2);
     expect(result).toBe('ok');
+    expect(metrics.summaryFailure.inc).toHaveBeenCalledTimes(1);
+    expect(metrics.summarySuccess.inc).toHaveBeenCalledTimes(1);
   });
 
   test('throws after exceeding retries', async () => {
@@ -51,6 +69,8 @@ describe('Summarizer', () => {
 
     await expect(summarizer.summarize('http://c.com')).rejects.toThrow('err');
     expect(aiService.generateSummary).toHaveBeenCalledTimes(2);
+    expect(metrics.summaryFailure.inc).toHaveBeenCalledTimes(2);
+    expect(alertNotifier.notify).toHaveBeenCalled();
   });
 
   test('uses mock data when enabled', async () => {

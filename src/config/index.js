@@ -26,6 +26,10 @@ const config = {
     apiKey: process.env.OPENAI_API_KEY,
   },
 
+  alert: {
+    webhookUrl: process.env.ALERT_WEBHOOK_URL,
+  },
+
   logging: {
     level: process.env.LOG_LEVEL || 'info',
     filePath: process.env.LOG_FILE_PATH || 'logs/app.log',

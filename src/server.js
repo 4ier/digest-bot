@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const FeishuBot = require('./bot/FeishuBot');
 const logger = require('./utils/logger');
 const config = require('./config');
+const metrics = require('./services/monitoring/metrics');
 const tenantSettings = require('./services/tenantSettings');
 const mockData = require('./mock/mockData');
 
@@ -35,6 +36,12 @@ class Server {
       res.json({ status: 'ok' });
     });
 
+    // Prometheus metrics endpoint
+    this.app.get('/metrics', async (req, res) => {
+      res.set('Content-Type', metrics.contentType);
+      res.send(await metrics.getMetrics());
+    });
+    
     // Tenant settings API
     this.app.get('/api/tenants/:tenantId/settings', async (req, res) => {
       try {
