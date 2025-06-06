@@ -1,9 +1,10 @@
 const { Client } = require('@larksuiteoapi/node-sdk');
 const config = require('../config');
 const logger = require('../utils/logger');
+const MessageDispatcher = require('./MessageDispatcher');
 
 class FeishuBot {
-  constructor() {
+  constructor(options = {}) {
     this.client = new Client({
       appId: config.feishu.appId,
       appSecret: config.feishu.appSecret,
@@ -12,6 +13,14 @@ class FeishuBot {
 
     this.verificationToken = config.feishu.verificationToken;
     this.encryptKey = config.feishu.encryptKey;
+
+    this.dispatcher = new MessageDispatcher(options.dispatcherOptions);
+    this.dispatcher.registerHandler('text', async (event) => {
+      await this.handleTextMessage(event.message, event.chat_id);
+    });
+    this.dispatcher.registerHandler('image', async (event) => {
+      await this.handleImageMessage(event.message, event.chat_id);
+    });
   }
 
   /**
@@ -56,17 +65,7 @@ class FeishuBot {
         messageType: message.message_type,
       });
 
-      // 根据消息类型处理
-      switch (message.message_type) {
-        case 'text':
-          await this.handleTextMessage(message, chat_id);
-          break;
-        case 'image':
-          await this.handleImageMessage(message, chat_id);
-          break;
-        default:
-          logger.info('Unsupported message type:', message.message_type);
-      }
+      await this.dispatcher.dispatch(event);
     } catch (error) {
       logger.error('Error handling message:', error);
       throw error;
