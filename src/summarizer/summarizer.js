@@ -1,6 +1,8 @@
 const aiService = require('../services/ai');
 const contentFetcher = require('../services/contentFetcher');
 const logger = require('../utils/logger');
+const metrics = require('../services/monitoring/metrics');
+const alertNotifier = require('../services/monitoring/alertNotifier');
 
 class Summarizer {
   constructor(options = {}) {
@@ -12,13 +14,20 @@ class Summarizer {
     const style = options.style || this.defaultStyle;
     const content = await contentFetcher.fetch(url);
     let attempt = 0;
+    const endTimer = metrics.summaryDuration.startTimer();
     while (attempt <= this.maxRetries) {
       try {
-        return await aiService.generateSummary(content, { style });
+        const result = await aiService.generateSummary(content, { style });
+        metrics.summarySuccess.inc();
+        endTimer();
+        return result;
       } catch (err) {
         attempt += 1;
+        metrics.summaryFailure.inc();
         logger.warn('Summary generation failed', err);
         if (attempt > this.maxRetries) {
+          endTimer();
+          await alertNotifier.notify(`Summary generation failed for ${url}: ${err.message}`);
           throw err;
         }
       }

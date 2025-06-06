@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const FeishuBot = require('./bot/FeishuBot');
 const logger = require('./utils/logger');
 const config = require('./config');
+const metrics = require('./services/monitoring/metrics');
 
 class Server {
   constructor() {
@@ -30,6 +31,12 @@ class Server {
     // 健康检查接口
     this.app.get('/health', (req, res) => {
       res.json({ status: 'ok' });
+    });
+
+    // Prometheus metrics endpoint
+    this.app.get('/metrics', async (req, res) => {
+      res.set('Content-Type', metrics.contentType);
+      res.send(await metrics.getMetrics());
     });
 
     // 飞书事件回调接口
