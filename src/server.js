@@ -5,6 +5,7 @@ const logger = require('./utils/logger');
 const config = require('./config');
 const metrics = require('./services/monitoring/metrics');
 const tenantSettings = require('./services/tenantSettings');
+const userSettings = require('./services/userSettings');
 const mockData = require('./mock/mockData');
 
 class Server {
@@ -65,6 +66,40 @@ class Server {
         res.status(500).json({ error: 'Failed to update settings' });
       }
     });
+
+    // User settings API
+    this.app.get(
+      '/api/tenants/:tenantId/users/:userId/settings',
+      async (req, res) => {
+        try {
+          const data = await userSettings.getSettings(
+            req.params.tenantId,
+            req.params.userId
+          );
+          res.json(data);
+        } catch (err) {
+          logger.error('Failed to get user settings:', err);
+          res.status(500).json({ error: 'Failed to get settings' });
+        }
+      }
+    );
+
+    this.app.put(
+      '/api/tenants/:tenantId/users/:userId/settings',
+      async (req, res) => {
+        try {
+          const data = await userSettings.updateSettings(
+            req.params.tenantId,
+            req.params.userId,
+            req.body
+          );
+          res.json(data);
+        } catch (err) {
+          logger.error('Failed to update user settings:', err);
+          res.status(500).json({ error: 'Failed to update settings' });
+        }
+      }
+    );
 
     // 飞书事件回调接口
     this.app.post('/webhook/feishu', async (req, res, next) => {
