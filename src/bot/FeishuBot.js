@@ -1,4 +1,5 @@
 const { Client } = require('@larksuiteoapi/node-sdk');
+const crypto = require('crypto');
 const config = require('../config');
 const logger = require('../utils/logger');
 const MessageDispatcher = require('./MessageDispatcher');
@@ -41,22 +42,58 @@ class FeishuBot {
    */
   verifyRequest(headers, body) {
     try {
-      // 验证 Token
-      if (this.verificationToken && body.token !== this.verificationToken) {
-        logger.warn('Invalid verification token');
-        return false;
+      if (this.verificationToken && body?.token) {
+        if (body.token !== this.verificationToken) {
+          logger.warn('Invalid verification token');
+          return false;
+        }
       }
 
-      // TODO: 实现加密验证（如果需要）
-      // if (this.encryptKey) {
-      //   // 实现加密验证逻辑
-      // }
+      if (this.encryptKey) {
+        const timestamp = headers['x-lark-request-timestamp'];
+        const nonce = headers['x-lark-request-nonce'];
+        const signature = headers['x-lark-signature'];
+        const content = timestamp + nonce + this.encryptKey + JSON.stringify(body);
+        const computed = crypto.createHash('sha256').update(content).digest('hex');
+        if (signature !== computed) {
+          logger.warn('Invalid request signature');
+          return false;
+        }
+      }
 
       return true;
     } catch (error) {
       logger.error('Error verifying request:', error);
       return false;
     }
+  }
+
+  decrypt(encrypt) {
+    const hash = crypto.createHash('sha256');
+    hash.update(this.encryptKey);
+    const key = hash.digest();
+    const buffer = Buffer.from(encrypt, 'base64');
+    const iv = buffer.slice(0, 16);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    let decrypted = decipher.update(buffer.slice(16).toString('hex'), 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  }
+
+  parseEvent(headers, body) {
+    if (!this.verifyRequest(headers, body)) {
+      return null;
+    }
+    if (body.encrypt) {
+      try {
+        const decrypted = this.decrypt(body.encrypt);
+        return JSON.parse(decrypted);
+      } catch (err) {
+        logger.error('Failed to decrypt body:', err);
+        return null;
+      }
+    }
+    return body;
   }
 
   /**

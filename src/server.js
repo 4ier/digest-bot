@@ -7,6 +7,7 @@ const metrics = require('./services/monitoring/metrics');
 const tenantSettings = require('./services/tenantSettings');
 const userSettings = require('./services/userSettings');
 const mockData = require('./mock/mockData');
+const alertNotifier = require('./services/monitoring/alertNotifier');
 
 class Server {
   constructor() {
@@ -104,13 +105,12 @@ class Server {
     // 飞书事件回调接口
     this.app.post('/webhook/feishu', async (req, res, next) => {
       try {
-        // 验证请求
-        if (!this.bot.verifyRequest(req.headers, req.body)) {
+        const data = this.bot.parseEvent(req.headers, req.body);
+        if (!data) {
           return res.status(401).json({ error: 'Invalid request' });
         }
 
-        // 处理飞书事件
-        const { challenge, event } = req.body;
+        const { challenge, event } = data;
 
         // 处理验证请求
         if (challenge) {
@@ -139,6 +139,7 @@ class Server {
     // eslint-disable-next-line no-unused-vars
     this.app.use((err, req, res, next) => {
       logger.error('Unhandled error:', err);
+      alertNotifier.notify(`Server error: ${err.message}`);
       const status = err.status || 500;
       res.status(status).json({ error: err.message || 'Internal server error' });
     });
