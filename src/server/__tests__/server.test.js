@@ -11,6 +11,8 @@ jest.mock('../../config', () => ({
   features: { enableMockData: false },
 }));
 
+const config = require('../../config');
+
 const FeishuBot = require('../../bot/FeishuBot');
 const alertNotifier = require('../../services/monitoring/alertNotifier');
 
@@ -21,6 +23,7 @@ const Server = require('../../server');
 describe('Server routes', () => {
   beforeEach(() => {
     FeishuBot.mockClear();
+    config.features.enableMockData = false;
   });
 
   test('health route returns ok', async () => {
@@ -91,5 +94,23 @@ describe('Server routes', () => {
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: 'boom' });
     expect(alertNotifier.notify).toHaveBeenCalled();
+  });
+
+  test('demo route returns mock data when enabled', async () => {
+    config.features.enableMockData = true;
+    const server = new Server();
+
+    const res = await request(server.app).get('/demo/mock-data');
+    expect(res.status).toBe(200);
+    expect(res.body.links.length).toBeGreaterThan(0);
+    expect(res.body.links[0]).toHaveProperty('summary');
+  });
+
+  test('demo route not available when disabled', async () => {
+    config.features.enableMockData = false;
+    const server = new Server();
+
+    const res = await request(server.app).get('/demo/mock-data');
+    expect(res.status).toBe(404);
   });
 });
