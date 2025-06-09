@@ -2,6 +2,7 @@ require('dotenv').config();
 const Server = require('./server');
 const logger = require('./utils/logger');
 const TaskScheduler = require('./scheduler/taskScheduler');
+const alertNotifier = require('./services/monitoring/alertNotifier');
 
 // Initialize application
 async function init() {
@@ -26,12 +27,14 @@ async function init() {
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
+  alertNotifier.notify(`Uncaught Exception: ${error.message}`);
   process.exit(1);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  alertNotifier.notify(`Unhandled Rejection: ${reason}`);
   process.exit(1);
 });
 

@@ -38,8 +38,15 @@ describe('FeishuBot', () => {
 
   describe('verifyRequest', () => {
     it('should return true for valid token', () => {
-      const headers = {};
+      const headers = {
+        'x-lark-request-timestamp': '1',
+        'x-lark-request-nonce': 'n',
+      };
       const body = { token: 'test_token' };
+      headers['x-lark-signature'] = require('crypto')
+        .createHash('sha256')
+        .update('1' + 'n' + 'test_key' + JSON.stringify(body))
+        .digest('hex');
       expect(bot.verifyRequest(headers, body)).toBe(true);
     });
 
@@ -53,6 +60,43 @@ describe('FeishuBot', () => {
       const headers = null;
       const body = null;
       expect(bot.verifyRequest(headers, body)).toBe(false);
+    });
+  });
+
+  describe('parseEvent', () => {
+    const encryptData = (key, data) => {
+      const crypto = require('crypto');
+      const hash = crypto.createHash('sha256');
+      hash.update(key);
+      const aesKey = hash.digest();
+      const iv = Buffer.alloc(16, 0);
+      const cipher = crypto.createCipheriv('aes-256-cbc', aesKey, iv);
+      const encrypted = Buffer.concat([cipher.update(data, 'utf8'), cipher.final()]);
+      return Buffer.concat([iv, encrypted]).toString('base64');
+    };
+
+    it('decrypts and returns event data', () => {
+      const timestamp = '1';
+      const nonce = 'n';
+      const original = { event: { type: 'ping' } };
+      const encrypt = encryptData('test_key', JSON.stringify(original));
+      const body = { encrypt };
+      const signature = require('crypto')
+        .createHash('sha256')
+        .update(timestamp + nonce + 'test_key' + JSON.stringify(body))
+        .digest('hex');
+      const headers = {
+        'x-lark-request-timestamp': timestamp,
+        'x-lark-request-nonce': nonce,
+        'x-lark-signature': signature,
+      };
+      expect(bot.parseEvent(headers, body)).toEqual(original);
+    });
+
+    it('returns null for invalid signature', () => {
+      const headers = { 'x-lark-signature': 'bad' };
+      const body = { encrypt: 'abc' };
+      expect(bot.parseEvent(headers, body)).toBeNull();
     });
   });
 
