@@ -15,7 +15,6 @@ jest.mock('../../utils/logger');
 
 const schedule = require('node-schedule');
 const TaskScheduler = require('../taskScheduler');
-const DigestService = require('../../services/digest');
 
 describe('TaskScheduler', () => {
   beforeEach(() => {
