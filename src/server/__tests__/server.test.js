@@ -5,7 +5,10 @@ jest.mock('../../config', () => ({
   feishu: { appId: 'id', appSecret: 'sec', verificationToken: 'token' },
   logging: { level: 'info', filePath: 'logs/app.log' },
   server: { env: 'test', port: 3000 },
+  features: { enableMockData: false },
 }));
+
+const config = require('../../config');
 
 const FeishuBot = require('../../bot/FeishuBot');
 
@@ -16,6 +19,7 @@ const Server = require('../../server');
 describe('Server routes', () => {
   beforeEach(() => {
     FeishuBot.mockClear();
+    config.features.enableMockData = false;
   });
 
   test('health route returns ok', async () => {
@@ -87,5 +91,23 @@ describe('Server routes', () => {
     const res = await request(server.app).post('/webhook/feishu').send(payload);
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: 'boom' });
+  });
+
+  test('demo route returns mock data when enabled', async () => {
+    config.features.enableMockData = true;
+    const server = new Server();
+
+    const res = await request(server.app).get('/demo/mock-data');
+    expect(res.status).toBe(200);
+    expect(res.body.links.length).toBeGreaterThan(0);
+    expect(res.body.links[0]).toHaveProperty('summary');
+  });
+
+  test('demo route not available when disabled', async () => {
+    config.features.enableMockData = false;
+    const server = new Server();
+
+    const res = await request(server.app).get('/demo/mock-data');
+    expect(res.status).toBe(404);
   });
 });
