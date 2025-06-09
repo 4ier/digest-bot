@@ -5,6 +5,7 @@ jest.mock('../../config', () => ({
   feishu: { appId: 'id', appSecret: 'sec', verificationToken: 'token' },
   logging: { level: 'info', filePath: 'logs/app.log' },
   server: { env: 'test', port: 3000 },
+  features: { enableMockData: false },
 }));
 
 const FeishuBot = require('../../bot/FeishuBot');
