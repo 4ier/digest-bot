@@ -5,11 +5,14 @@ const aiService = require('./ai');
 const FeishuBot = require('../bot/FeishuBot');
 const logger = require('../utils/logger');
 const config = require('../config');
+const digestTemplate = require('./digestTemplate');
+const DailyDigestModel = require('../db/models/DailyDigest');
 
 class DigestService {
-  constructor() {
+  constructor(options = {}) {
     this.bot = new FeishuBot();
     this.chatId = config.feishu.defaultChatId;
+    this.maxRetries = options.retries ?? 2;
   }
 
   async generateDigest() {
@@ -36,18 +39,41 @@ class DigestService {
       })
     );
 
-    return aiService.generateDailyDigest(articles);
+    const digestText = await aiService.generateDailyDigest(articles);
+    return digestTemplate.generateMarkdown(digestText, new Date());
   }
 
   async sendDigest() {
     try {
-      const digest = await this.generateDigest();
-      if (!digest) {
+      const markdown = await this.generateDigest();
+      if (!markdown) {
         logger.info('No articles found for digest');
         return;
       }
-      await this.bot.replyMessage(this.chatId, digest);
-      logger.info('Daily digest sent');
+
+      const conn = await db.connect('default');
+      const Digest = DailyDigestModel(conn);
+      await Digest.create({
+        content: markdown,
+        date: new Date(),
+        tenantId: 'default',
+        version: digestTemplate.VERSION,
+      });
+
+      let attempt = 0;
+      while (attempt <= this.maxRetries) {
+        try {
+          await this.bot.replyMessage(this.chatId, markdown);
+          logger.info('Daily digest sent');
+          return;
+        } catch (err) {
+          attempt += 1;
+          logger.warn('Failed to send digest attempt', attempt, err);
+          if (attempt > this.maxRetries) {
+            throw err;
+          }
+        }
+      }
     } catch (err) {
       logger.error('Failed to send digest:', err);
     }
