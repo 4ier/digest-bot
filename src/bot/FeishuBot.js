@@ -2,6 +2,12 @@ const { Client } = require('@larksuiteoapi/node-sdk');
 const config = require('../config');
 const logger = require('../utils/logger');
 const MessageDispatcher = require('./MessageDispatcher');
+const db = require('../db');
+const createLinkModel = require('../db/models/Link');
+const createSummaryModel = require('../db/models/Summary');
+const LinkExtractor = require('../parser/linkExtractor');
+const LinkValidator = require('../parser/linkValidator');
+const Summarizer = require('../summarizer/summarizer');
 
 class FeishuBot {
   constructor(options = {}) {
@@ -13,6 +19,10 @@ class FeishuBot {
 
     this.verificationToken = config.feishu.verificationToken;
     this.encryptKey = config.feishu.encryptKey;
+
+    this.extractor = new LinkExtractor();
+    this.validator = new LinkValidator();
+    this.summarizer = new Summarizer();
 
     this.dispatcher = new MessageDispatcher(options.dispatcherOptions);
     this.dispatcher.registerHandler('text', async (event) => {
@@ -81,12 +91,46 @@ class FeishuBot {
   async handleTextMessage(message, chatId) {
     try {
       const text = message.content.text;
+      const links = this.extractor.extract(text);
 
-      // TODO: 实现链接提取
-      // TODO: 实现内容处理
+      if (links.length === 0) {
+        await this.replyMessage(chatId, '未识别到链接');
+        return;
+      }
 
-      // 临时回复
-      await this.replyMessage(chatId, '收到消息：' + text);
+      const conn = await db.connect('default');
+      const Link = createLinkModel(conn);
+      const Summary = createSummaryModel(conn);
+
+      let saved = 0;
+      for (const info of links) {
+        try {
+          const meta = await this.validator.validate(info.url);
+          if (!meta.valid) continue;
+
+          const linkDoc = await Link.create({
+            url: info.url,
+            platform: info.platform,
+            category: info.category,
+            title: meta.title,
+            tenantId: 'default',
+          });
+
+          const summary = await this.summarizer.summarize(info.url);
+          await Summary.create({
+            linkId: linkDoc._id,
+            content: summary,
+            style: this.summarizer.defaultStyle,
+            tenantId: 'default',
+          });
+          await Link.updateOne({ _id: linkDoc._id }, { summary });
+          saved += 1;
+        } catch (err) {
+          logger.error('Failed to process link:', err);
+        }
+      }
+
+      await this.replyMessage(chatId, `已保存${saved}条链接`);
     } catch (error) {
       logger.error('Error handling text message:', error);
       throw error;
@@ -101,8 +145,7 @@ class FeishuBot {
    */
   async handleImageMessage(message, chatId) {
     try {
-      // TODO: 实现图片处理
-      await this.replyMessage(chatId, '收到图片消息');
+      await this.replyMessage(chatId, '暂不支持处理图片消息');
     } catch (error) {
       logger.error('Error handling image message:', error);
       throw error;

@@ -13,6 +13,12 @@ jest.mock('@larksuiteoapi/node-sdk', () => {
   };
 });
 jest.mock('../../utils/logger');
+jest.mock('../../db', () => ({ connect: jest.fn(async () => ({})) }));
+jest.mock('../../db/models/Link', () => jest.fn(() => ({ create: jest.fn(), updateOne: jest.fn() })));
+jest.mock('../../db/models/Summary', () => jest.fn(() => ({ create: jest.fn() })));
+jest.mock('../../parser/linkExtractor', () => jest.fn(() => ({ extract: jest.fn(() => []) })));
+jest.mock('../../parser/linkValidator', () => jest.fn(() => ({ validate: jest.fn(async () => ({ valid: true, title: 't' })) })));
+jest.mock('../../summarizer/summarizer', () => jest.fn(() => ({ summarize: jest.fn(async () => 's'), defaultStyle: 'bullet' })));
 jest.mock('../../config', () => ({
   feishu: {
     appId: 'test_app_id',
@@ -74,7 +80,7 @@ describe('FeishuBot', () => {
 
       expect(bot.replyMessage).toHaveBeenCalledWith(
         'test_chat',
-        '收到消息：test message'
+        '未识别到链接'
       );
     });
 
@@ -95,7 +101,7 @@ describe('FeishuBot', () => {
 
       expect(bot.replyMessage).toHaveBeenCalledWith(
         'test_chat',
-        '收到图片消息'
+        '暂不支持处理图片消息'
       );
     });
 
