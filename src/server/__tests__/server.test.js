@@ -3,8 +3,11 @@ const request = require('supertest');
 jest.mock('../../utils/logger');
 jest.mock('../../config', () => ({
   feishu: { appId: 'id', appSecret: 'sec', verificationToken: 'token' },
+  siliconflow: { apiKey: 'k', baseUrl: 'u', model: 'm' },
+  openai: { apiKey: 'k' },
   logging: { level: 'info', filePath: 'logs/app.log' },
   server: { env: 'test', port: 3000 },
+  features: { enableMockData: false },
 }));
 
 const FeishuBot = require('../../bot/FeishuBot');
