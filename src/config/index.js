@@ -48,7 +48,6 @@ const requiredConfigs = [
   'feishu.appSecret',
   'feishu.verificationToken',
   'siliconflow.apiKey',
-  'openai.apiKey',
 ];
 
 function validateConfig() {

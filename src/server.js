@@ -43,7 +43,7 @@ class Server {
       res.set('Content-Type', metrics.contentType);
       res.send(await metrics.getMetrics());
     });
-    
+
     // Tenant settings API
     this.app.get('/api/tenants/:tenantId/settings', async (req, res) => {
       try {

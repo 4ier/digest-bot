@@ -61,6 +61,7 @@ jobs:
     
     - name: Deploy to server
       uses: appleboy/ssh-action@master
+      envs: FEISHU_APP_ID,FEISHU_APP_SECRET,FEISHU_DEFAULT_CHAT_ID,FEISHU_ENCRYPT_KEY,FEISHU_VERIFICATION_TOKEN,SILICONFLOW_API_KEY,SILICONFLOW_BASE_URL,SILICONFLOW_MODEL
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USERNAME }}
@@ -68,5 +69,14 @@ jobs:
         script: |
           cd /var/www/digest-bot
           git pull
+          cp .env.example .env
+          sed -i "s|^FEISHU_APP_ID=.*|FEISHU_APP_ID=$FEISHU_APP_ID|" .env
+          sed -i "s|^FEISHU_APP_SECRET=.*|FEISHU_APP_SECRET=$FEISHU_APP_SECRET|" .env
+          sed -i "s|^FEISHU_VERIFICATION_TOKEN=.*|FEISHU_VERIFICATION_TOKEN=$FEISHU_VERIFICATION_TOKEN|" .env
+          sed -i "s|^FEISHU_ENCRYPT_KEY=.*|FEISHU_ENCRYPT_KEY=$FEISHU_ENCRYPT_KEY|" .env
+          sed -i "s|^FEISHU_DEFAULT_CHAT_ID=.*|FEISHU_DEFAULT_CHAT_ID=$FEISHU_DEFAULT_CHAT_ID|" .env
+          sed -i "s|^SILICONFLOW_API_KEY=.*|SILICONFLOW_API_KEY=$SILICONFLOW_API_KEY|" .env
+          sed -i "s|^SILICONFLOW_BASE_URL=.*|SILICONFLOW_BASE_URL=$SILICONFLOW_BASE_URL|" .env
+          sed -i "s|^SILICONFLOW_MODEL=.*|SILICONFLOW_MODEL=$SILICONFLOW_MODEL|" .env
           npm install --production
-          pm2 reload ecosystem.config.js 
+          pm2 reload ecosystem.config.js
