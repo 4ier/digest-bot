@@ -1,5 +1,5 @@
 // MongoDB initialization script
-db = db.getSiblingDB('feishu-digest-bot');
+var db = db.getSiblingDB('feishu-digest-bot');
 
 // Create collections with indexes
 db.createCollection('links');
