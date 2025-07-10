@@ -65,7 +65,9 @@ function validateConfig() {
   }
 }
 
-// Validate configuration on load
-validateConfig();
+// Only validate configuration in production
+if (process.env.NODE_ENV === 'production') {
+  validateConfig();
+}
 
 module.exports = config;

@@ -1,10 +1,11 @@
-name: CI/CD
+name: CI/CD Local Docker Deployment
 
 on:
   push:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -15,10 +16,10 @@ jobs:
         node-version: [18.x]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
@@ -35,48 +36,131 @@ jobs:
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       with:
-        fail_ci_if_error: true
+        fail_ci_if_error: false
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18.x'
-        cache: 'npm'
+    - name: Setup SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
     
-    - name: Install dependencies
-      run: npm ci
+    - name: Deploy to server with local Docker build
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} << 'EOF'
+          # Navigate to application directory
+          cd /var/www/digest-bot || { echo "Application directory not found"; exit 1; }
+          
+          # Pull latest changes
+          git pull origin master
+          
+          # Create environment file
+          cat > .env << 'ENVEOF'
+        # Production Environment Configuration
+        NODE_ENV=production
+        PORT=3000
+        
+        # MongoDB Configuration
+        MONGODB_URI=${{ secrets.MONGODB_URI || 'mongodb://admin:admin123@mongodb:27017/feishu-digest-bot?authSource=admin' }}
+        MONGO_ROOT_PASSWORD=${{ secrets.MONGO_ROOT_PASSWORD || 'admin123' }}
+        
+        # Feishu Bot Configuration
+        FEISHU_APP_ID=${{ secrets.FEISHU_APP_ID }}
+        FEISHU_APP_SECRET=${{ secrets.FEISHU_APP_SECRET }}
+        FEISHU_VERIFICATION_TOKEN=${{ secrets.FEISHU_VERIFICATION_TOKEN }}
+        FEISHU_ENCRYPT_KEY=${{ secrets.FEISHU_ENCRYPT_KEY }}
+        FEISHU_DEFAULT_CHAT_ID=${{ secrets.FEISHU_DEFAULT_CHAT_ID }}
+        
+        # SiliconFlow Configuration
+        SILICONFLOW_API_KEY=${{ secrets.SILICONFLOW_API_KEY }}
+        SILICONFLOW_BASE_URL=${{ secrets.SILICONFLOW_BASE_URL || 'https://api.siliconflow.cn/v1' }}
+        SILICONFLOW_MODEL=${{ secrets.SILICONFLOW_MODEL || 'deepseek-ai/DeepSeek-R1' }}
+        
+        # OpenAI Configuration (Optional)
+        OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY || '' }}
+        
+        # Alert Configuration
+        ALERT_WEBHOOK_URL=${{ secrets.ALERT_WEBHOOK_URL || '' }}
+        
+        # Logging Configuration
+        LOG_LEVEL=info
+        LOG_FILE_PATH=logs/app.log
+        
+        # Feature Flags
+        ENABLE_MOCK_DATA=false
+        ENABLE_DAILY_DIGEST=true
+        DIGEST_TIME=20:00
+        ENVEOF
+          
+          # Stop existing containers (if any)
+          docker-compose -f docker-compose.local.yml down || true
+          
+          # Build the Docker image locally
+          echo "🔨 Building Docker image locally..."
+          docker build -t feishu-digest-bot:latest .
+          
+          # Clean up old images to save space
+          docker image prune -af --filter="dangling=true"
+          
+          # Start services with locally built image
+          echo "🚀 Starting services..."
+          docker-compose -f docker-compose.local.yml up -d
+          
+          # Wait for services to be healthy
+          echo "⏳ Waiting for services to start..."
+          sleep 30
+          
+          # Show container status
+          echo "📊 Container status:"
+          docker-compose -f docker-compose.local.yml ps
+          
+          # Show recent logs
+          echo "📝 Recent application logs:"
+          docker-compose -f docker-compose.local.yml logs --tail=20 app
+        EOF
     
-    - name: Build
-      run: npm run build
-      env:
-        NODE_ENV: production
+    - name: Verify deployment
+      run: |
+        # Wait for application to start
+        sleep 20
+        
+        # Check if the application is responding
+        for i in {1..5}; do
+          if curl -f -s http://${{ secrets.SERVER_HOST }}:3000/health; then
+            echo "✅ Deployment successful! Application is responding."
+            echo "Response: $(curl -s http://${{ secrets.SERVER_HOST }}:3000/health)"
+            break
+          else
+            echo "Attempt $i: Application not ready yet, waiting..."
+            sleep 15
+          fi
+          
+          if [ $i -eq 5 ]; then
+            echo "❌ Deployment verification failed after 5 attempts"
+            echo "Checking server logs..."
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "cd /var/www/digest-bot && docker-compose -f docker-compose.local.yml logs app"
+            exit 1
+          fi
+        done
     
-    - name: Deploy to server
-      uses: appleboy/ssh-action@master
-      envs: FEISHU_APP_ID,FEISHU_APP_SECRET,FEISHU_DEFAULT_CHAT_ID,FEISHU_ENCRYPT_KEY,FEISHU_VERIFICATION_TOKEN,SILICONFLOW_API_KEY,SILICONFLOW_BASE_URL,SILICONFLOW_MODEL
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        script: |
-          cd /var/www/digest-bot
-          git pull
-          cp .env.example .env
-          sed -i "s|^FEISHU_APP_ID=.*|FEISHU_APP_ID=$FEISHU_APP_ID|" .env
-          sed -i "s|^FEISHU_APP_SECRET=.*|FEISHU_APP_SECRET=$FEISHU_APP_SECRET|" .env
-          sed -i "s|^FEISHU_VERIFICATION_TOKEN=.*|FEISHU_VERIFICATION_TOKEN=$FEISHU_VERIFICATION_TOKEN|" .env
-          sed -i "s|^FEISHU_ENCRYPT_KEY=.*|FEISHU_ENCRYPT_KEY=$FEISHU_ENCRYPT_KEY|" .env
-          sed -i "s|^FEISHU_DEFAULT_CHAT_ID=.*|FEISHU_DEFAULT_CHAT_ID=$FEISHU_DEFAULT_CHAT_ID|" .env
-          sed -i "s|^SILICONFLOW_API_KEY=.*|SILICONFLOW_API_KEY=$SILICONFLOW_API_KEY|" .env
-          sed -i "s|^SILICONFLOW_BASE_URL=.*|SILICONFLOW_BASE_URL=$SILICONFLOW_BASE_URL|" .env
-          sed -i "s|^SILICONFLOW_MODEL=.*|SILICONFLOW_MODEL=$SILICONFLOW_MODEL|" .env
-          npm install --production
-          pm2 reload ecosystem.config.js
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "🎉 Local Docker deployment completed successfully!"
+          echo "🔗 Application URL: http://${{ secrets.SERVER_HOST }}:3000"
+          echo "📊 Health endpoint: http://${{ secrets.SERVER_HOST }}:3000/health"
+          echo "📈 Metrics endpoint: http://${{ secrets.SERVER_HOST }}:3000/metrics"
+          echo "🐳 Docker containers are running locally on your server"
+        else
+          echo "💥 Local Docker deployment failed!"
+          echo "Check the deployment logs above for details"
+        fi

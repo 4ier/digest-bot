@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.production
 
 # Logs
 logs/
@@ -33,4 +34,16 @@ coverage
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# PM2 logs and ecosystem backup
+pm2.log
+ecosystem.config.js.bak
+
+# Production builds
+dist/
+build/
+
+# Temporary files
+tmp/
+temp/ 
