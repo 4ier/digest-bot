@@ -1,5 +1,5 @@
 // MongoDB initialization script
-var db = db.getSiblingDB('feishu-digest-bot');
+const db = db.getSiblingDB('feishu-digest-bot');
 
 // Create collections with indexes
 db.createCollection('links');
@@ -22,4 +22,5 @@ db.dailydigests.createIndex({ "date": -1 });
 db.tenantsettings.createIndex({ "tenantId": 1 }, { unique: true });
 db.usersettings.createIndex({ "userId": 1, "tenantId": 1 }, { unique: true });
 
+// eslint-disable-next-line no-undef
 print('Database initialized successfully');

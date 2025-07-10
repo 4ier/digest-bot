@@ -14,7 +14,7 @@ class AlertNotifier {
       return;
     }
     try {
-      await axios.post(this.webhookUrl, { 
+      await axios.post(this.webhookUrl, {
         text: message,
         timestamp: new Date().toISOString(),
         service: 'feishu-digest-bot',

@@ -92,10 +92,10 @@ class Metrics {
   }
 
   recordSummaryFailure(aiService, tenantId, errorType) {
-    this.summaryFailure.inc({ 
-      ai_service: aiService, 
-      tenant_id: tenantId, 
-      error_type: errorType 
+    this.summaryFailure.inc({
+      ai_service: aiService,
+      tenant_id: tenantId,
+      error_type: errorType
     });
   }
 
@@ -105,10 +105,10 @@ class Metrics {
 
   // Message processing metrics
   recordMessageProcessed(status, tenantId, messageType = 'text') {
-    this.messageProcessing.inc({ 
-      status, 
-      tenant_id: tenantId, 
-      message_type: messageType 
+    this.messageProcessing.inc({
+      status,
+      tenant_id: tenantId,
+      message_type: messageType
     });
   }
 
